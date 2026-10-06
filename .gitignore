@@ -1,0 +1,64 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Pytest / testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Experiments, logs, and checkpoints
+outputs/
+logs/
+checkpoints/*
+!checkpoints/exported_gaze_predictor/
+!checkpoints/exported_gaze_predictor/**
+*.pt
+*.bin
+*.safetensors
+eval_results.json
+metrics.jsonl
+wandb/
+slurm-*.out
+slurm-*.err
+
+# Human evaluation raw uncompressed JSONs (>100MB GitHub limit; use .json.gz instead)
+results/
+results/human_eval/*.json
+
+# Large dataset raw images (if downloaded locally)
+data/images/
+data/coco*/
+data/refcoco/images/
+
+# Presentation and slide clutter in root
+human_efficiency_*.gif
+human_efficiency_*.png
+human_efficiency_*.pdf
+
+# Archive & compressed artifacts (keep .json.gz)
+*.tar.gz
+*.zip
+*.tar
+
+# OS / Editor artifacts
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+.ipynb_checkpoints/

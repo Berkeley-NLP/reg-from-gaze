@@ -1,0 +1,11 @@
+{
+  "dataset_name": "NaiveDev/coco-2014-instance",
+  "dataset_config": null,
+  "base_split": "validation",
+  "val_ratio": 0.05,
+  "random_seed": 777,
+  "total_examples": 40137,
+  "train_examples": 38131,
+  "val_examples": 2006,
+  "id_field": "coco_url"
+}

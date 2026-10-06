@@ -1,0 +1,28 @@
+# Base training configuration for Molmo-REC-Gaze
+model:
+  name_or_path: allenai/Molmo-7B-D-0924
+  freeze_vision_backbone: true
+  dtype: bfloat16
+
+data:
+  train_json: data/refcocogaze_train_delay.json
+  val_json: data/refcocogaze_val_delay.json
+  image_base: ../../../../scratch/current/teaywright/images
+  max_length: 256
+  level: token  # token (subword expansion) or word
+
+training:
+  output_dir: checkpoints/gaze_predictor_run
+  num_train_epochs: 4
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 1.0e-5
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  optim: paged_adamw_8bit
+  eval_steps: 100
+  early_stopping_patience: 5
+  seed: 42

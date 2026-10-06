@@ -1,0 +1,9 @@
+# Evaluation and benchmark settings
+evaluation:
+  checkpoint: Berkeley-NLP/Molmo-REC-Gaze
+  art_checkpoint: data/refcocogaze/art_checkpoint.json
+  gold_data: data/refcocogaze/refcocogaze_val_correct.json
+  val_json: data/refcocogaze/refcocogaze_val_delay.json
+  image_dir: ../../../../scratch/current/teaywright/images
+  output_csv: results/listener_eval/tables/gaze_appendix_eval_metrics.csv
+  output_preds: results/listener_eval/preds/eval_predictions.json

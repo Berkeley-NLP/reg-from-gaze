@@ -1,0 +1,70 @@
+name: rec_seq_any_hit
+description: REC Baseline with Iterative Molmo Listener and Sequence Any Hit binary
+  reward
+speaker:
+  model_name_or_path: allenai/Molmo-7B-D-0924
+  architecture: molmo
+  prompt_type: all
+  max_new_tokens: 20
+  temperature: 1.0
+  top_p: 1.0
+  torch_dtype: bfloat16
+listener:
+  model_name_or_path: allenai/Molmo-7B-D-0924
+  listener_type: molmo_iterative
+  prediction_level: token
+  strip_punctuation: false
+  torch_dtype: bfloat16
+reward:
+  reward_type: binary
+  gamma: 0.9
+  hit_reward: 1.0
+  miss_reward: 0.0
+  eos_bonus: 0.0
+  shaping_scale: 1.0
+  use_length_penalty: false
+  length_penalty_beta: 0.01
+  logit_penalty_weight: 0.0
+  gaussian_sigma_default: 10.0
+lora:
+  enabled: true
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  bias: none
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+dataset:
+  dataset_name: coco_2014
+  splits_dir: data/splits
+  use_existing_splits: true
+  train_split: train
+  val_split: val
+  max_samples: null
+training:
+  learning_rate: 1.0e-05
+  weight_decay: 0.01
+  max_grad_norm: 3.0
+  gradient_accumulation_steps: 8
+  batch_size: 8
+  validation_batch_size: 16
+  warmup_steps: 16
+  num_episodes: 64000
+  validation_frequency: 2000
+  periodic_checkpoint_interval: 1000
+  kl_coef: 0.02
+  entropy_coef: 0.01
+  lr_schedule: constant
+  output_dir: ./outputs
+  seed: 42
+  wandb: false
+  wandb_project: reg-from-gaze
+  wandb_entity: null  # placeholder: set your W&B entity or export WANDB_ENTITY
+  wandb_run_name: null
+  smoke_test: false

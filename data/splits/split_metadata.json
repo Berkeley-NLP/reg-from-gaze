@@ -1,0 +1,11 @@
+{
+  "dataset_name": "lmms-lab/refcoco",
+  "dataset_config": "default",
+  "base_split": "val",
+  "val_ratio": 0.05,
+  "random_seed": 42,
+  "total_examples": 8811,
+  "train_examples": 8371,
+  "val_examples": 440,
+  "id_field": "question_id"
+}

@@ -1,0 +1,22 @@
+model_name: allenai/Molmo-7B-D-0924
+train_json: data/refcocogaze/refcocogaze_train_adjusted.json
+val_json: data/refcocogaze/refcocogaze_val_adjusted.json
+image_base: ../../../../scratch/current/teaywright/images
+output_dir: output
+
+data:
+  format: interleaved_full  # options: interleaved_full, stochastic_prefix, flattened_interleaved, user_assistant
+  prefix_sampling: full  # options: stochastic, full, fixed_length
+  prefix_min_length: 4
+  gaze_format: normalized  # options: normalized, raw, rounded
+  gaze_target_width: 100
+  gaze_target_height: 100
+
+max_length: 128
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+num_train_epochs: 1
+gradient_accumulation_steps: 64
+learning_rate: 0.00005
+eval_steps: 1
+n_eval_samples: 10 

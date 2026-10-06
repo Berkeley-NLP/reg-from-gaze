@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gazerl"
+version = "0.1.0"
+description = "Learning to Refer from Estimated Listener Gaze (GazeRL)"
+authors = [
+    { name = "Téa Wright", email = "teaywright@berkeley.edu" }
+]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2.0",
+    "torchvision>=0.17.0",
+    "transformers>=4.45.0",
+    "accelerate>=0.30.0",
+    "peft>=0.10.0",
+    "datasets>=2.18.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pandas>=2.0.0",
+    "pillow>=9.5.0",
+    "matplotlib>=3.7.0",
+    "pyyaml>=6.0",
+    "einops>=0.7.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+eval = [
+    "evaluate>=0.4.0",
+    "nltk>=3.8.0",
+    "rouge-score>=0.1.2",
+]
+viz = [
+    "streamlit>=1.30.0",
+]
+listener = [
+    "bitsandbytes>=0.43.0",
+    "fastdtw>=0.3.4",
+]
+dev = [
+    "pytest>=8.0.0",
+]
+all = [
+    "evaluate>=0.4.0",
+    "nltk>=3.8.0",
+    "rouge-score>=0.1.2",
+    "streamlit>=1.30.0",
+    "bitsandbytes>=0.43.0",
+    "fastdtw>=0.3.4",
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["configs*", "data*", "gaze_estimation*", "reg*"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "reg", "gaze_estimation"]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::FutureWarning:transformers.utils.hub",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+

@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software or the associated evaluation benchmarks, please cite it as below."
+title: "Learning to Refer from Estimated Listener Gaze"
+authors:
+  - family-names: "Wright"
+    given-names: "Téa"
+    affiliation: "University of California, Berkeley"
+  - family-names: "Suhr"
+    given-names: "Alane"
+    affiliation: "University of California, Berkeley"
+year: 2026
+url: "https://arxiv.org/abs/2609.14207"
+repository-code: "https://github.com/Berkeley-NLP/reg-from-gaze"
+keywords:
+  - "referring expression generation"
+  - "vision-language models"
+  - "reinforcement learning"
+  - "eye tracking"
+  - "listener gaze"
+  - "communicative efficiency"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Wright"
+      given-names: "Téa"
+      affiliation: "University of California, Berkeley"
+    - family-names: "Suhr"
+      given-names: "Alane"
+      affiliation: "University of California, Berkeley"
+  title: "Learning to Refer from Estimated Listener Gaze"
+  year: 2026
+  journal: "Conference on Language Modeling (COLM)"
+  url: "https://arxiv.org/abs/2609.14207"

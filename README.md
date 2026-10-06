@@ -100,6 +100,3 @@ python scripts/eval_listener.py --checkpoint Berkeley-NLP/Molmo-REC-Gaze
 }
 ```
 
-## License
-
-This project is licensed under the Apache License 2.0.

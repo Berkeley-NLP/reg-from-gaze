@@ -16,7 +16,7 @@ REG-from-Gaze trains Vision-Language Model (VLM) speakers to generate referring 
 ## Installation
 
 ```bash
-git clone [https://github.com/Berkeley-NLP/reg-from-gaze.git](https://github.com/Berkeley-NLP/reg-from-gaze.git)
+git clone https://github.com/Berkeley-NLP/reg-from-gaze.git
 cd reg-from-gaze
 
 conda create -n gazerl python=3.10 -y

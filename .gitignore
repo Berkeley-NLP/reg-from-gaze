@@ -36,14 +36,15 @@ wandb/
 slurm-*.out
 slurm-*.err
 
-# Human evaluation raw uncompressed JSONs (>100MB GitHub limit; use .json.gz instead)
-results/
+# Human evaluation raw uncompressed JSONs (>100MB GitHub limit; use .json.gz instead), need to add back in results data later
+results/ 
 results/human_eval/*.json
 
 # Large dataset raw images (if downloaded locally)
 data/images/
 data/coco*/
 data/refcoco/images/
+figures/ 
 
 # Presentation and slide clutter in root
 human_efficiency_*.gif

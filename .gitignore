@@ -24,10 +24,7 @@ htmlcov/
 # Experiments, logs, and checkpoints
 outputs/
 logs/
-checkpoints/*
-!checkpoints/exported_gaze_predictor/
-!checkpoints/exported_gaze_predictor/**
-checkpoints/**/__pycache__/
+checkpoints/
 *.pt
 *.bin
 *.safetensors

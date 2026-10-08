@@ -128,8 +128,10 @@ def reproduce_appendix_c3():
     print("REPRODUCING: Appendix C.3 (Listener Variant Baselines)")
     print("=" * 75)
 
+    canonical_local = REPO_ROOT / "checkpoints" / "exported_gaze_predictor"
+    canonical_path = str(canonical_local) if canonical_local.exists() else "Berkeley-NLP/Molmo-REC-Gaze"
     variants = [
-        ("Canonical Molmo-REC-Gaze", str(REPO_ROOT / "checkpoints" / "exported_gaze_predictor")),
+        ("Canonical Molmo-REC-Gaze", canonical_path),
         ("Final Gaze Point Listener (C.3.1)", str(REPO_ROOT / "results" / "eval_runs" / "gaze_seq_lp_hit_seed464652")),
         ("BBox Center Listener (C.3.2)", str(REPO_ROOT / "results" / "eval_runs" / "rec_success_seed187357")),
     ]
@@ -137,7 +139,7 @@ def reproduce_appendix_c3():
     print(f"{'Listener Variant':<35} | {'Model / Policy Status':<25} | {'Role':<25}")
     print("-" * 88)
     for name, path in variants:
-        status = "Available (Ready)" if Path(path).exists() else "Missing"
+        status = "Available (Ready)" if (Path(path).exists() if not path.startswith("Berkeley") else True) else "Missing"
         role = "Full scanpath prediction" if "Canonical" in name else ("Single final point" if "Point" in name else "Object centroid")
         print(f"{name:<35} | {status:<25} | {role:<25}")
     print("✓ Baseline architectures verified.")

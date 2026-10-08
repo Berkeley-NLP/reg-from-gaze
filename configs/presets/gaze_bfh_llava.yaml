@@ -1,21 +1,21 @@
-name: rec_bfh
-description: REC Baseline with Iterative Molmo Listener and Before-First-Hit (BFH) sparse reward
+name: gaze_bfh_llava
+description: GazeRL with LLaVA-1.5-7B Speaker and Gaze Predictor BFH reward (Paper Table 12 cross-architecture)
 speaker:
-  model_name_or_path: allenai/Molmo-7B-D-0924
-  architecture: molmo
+  model_name_or_path: llava-hf/llava-1.5-7b-hf
+  architecture: llava
   prompt_type: all
   max_new_tokens: 20
   temperature: 1.0
-  top_p: 1.0
+  top_p: 0.9
   torch_dtype: bfloat16
 listener:
-  model_name_or_path: allenai/Molmo-7B-D-0924
-  listener_type: molmo_iterative
+  model_name_or_path: Berkeley-NLP/Molmo-REC-Gaze
+  listener_type: gaze_predictor
   prediction_level: token
   strip_punctuation: false
   torch_dtype: bfloat16
 reward:
-  reward_type: sparse_decay
+  reward_type: before_first_hit
   gamma: 0.9
   hit_reward: 1.0
   miss_reward: 0.0
@@ -36,9 +36,6 @@ lora:
   - k_proj
   - v_proj
   - o_proj
-  - gate_proj
-  - up_proj
-  - down_proj
 dataset:
   dataset_name: coco_2014
   splits_dir: data/splits
@@ -64,6 +61,6 @@ training:
   seed: 42
   wandb: false
   wandb_project: reg-from-gaze
-  wandb_entity: null  # placeholder: set your W&B entity or export WANDB_ENTITY
+  wandb_entity: null
   wandb_run_name: null
   smoke_test: false

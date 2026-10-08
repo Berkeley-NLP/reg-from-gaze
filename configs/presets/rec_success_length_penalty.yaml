@@ -1,5 +1,5 @@
-name: rec_bfh
-description: REC Baseline with Iterative Molmo Listener and Before-First-Hit (BFH) sparse reward
+name: rec_success_length_penalty
+description: REC Baseline with Supervised target reward and length penalty regularization (Paper Appendix C.2 ablation)
 speaker:
   model_name_or_path: allenai/Molmo-7B-D-0924
   architecture: molmo
@@ -10,19 +10,19 @@ speaker:
   torch_dtype: bfloat16
 listener:
   model_name_or_path: allenai/Molmo-7B-D-0924
-  listener_type: molmo_iterative
+  listener_type: rec_single_point
   prediction_level: token
   strip_punctuation: false
   torch_dtype: bfloat16
 reward:
-  reward_type: sparse_decay
+  reward_type: rec_success
   gamma: 0.9
   hit_reward: 1.0
   miss_reward: 0.0
   eos_bonus: 0.0
   shaping_scale: 1.0
-  use_length_penalty: false
-  length_penalty_beta: 0.01
+  use_length_penalty: true  # Length penalty enabled
+  length_penalty_beta: 0.01  # Penalty coefficient beta=0.01
   logit_penalty_weight: 0.0
   gaussian_sigma_default: 10.0
 lora:
@@ -64,6 +64,6 @@ training:
   seed: 42
   wandb: false
   wandb_project: reg-from-gaze
-  wandb_entity: null  # placeholder: set your W&B entity or export WANDB_ENTITY
+  wandb_entity: null
   wandb_run_name: null
   smoke_test: false

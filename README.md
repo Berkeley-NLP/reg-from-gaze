@@ -33,8 +33,8 @@ pip install -e ".[all]"
 Train a speaker policy (default: `Molmo-7B-D`) using preset configurations:
 
 ```bash
-# Gaze-BeforeFirstHit
-python scripts/train.py --config configs/presets/gaze_bfh.yaml
+# Gaze-BeforeFirstHit (paper recommended formulation)
+python scripts/train.py --config configs/presets/gaze_before_first_hit.yaml
 
 # Gaze-Shaping
 python scripts/train.py --config configs/presets/gaze_shaping.yaml
@@ -65,7 +65,7 @@ python scripts/preprocess_gaze.py \
     --val_out data/refcocogaze/refcocogaze_val_delay.json
 
 # Fine-tune Molmo-7B listener
-python scripts/train_listener.py --config configs/listener/canonical_molmo_gaze.yaml
+python scripts/train_listener.py --config configs/listener/molmo_rec_gaze.yaml
 
 # Export listener checkpoint for speaker RL
 python scripts/export_listener.py \
@@ -76,14 +76,22 @@ python scripts/export_listener.py \
 
 ### Evaluating Models
 
+Evaluate speaker policies on the canonical paper evaluation benchmarks (`refcoco_testA`, `refcoco_testB`, `refoi_co_occurrence`, `refoi_single_presence`):
+
 ```bash
-# Evaluate a speaker policy
+# Evaluate speaker policy on RefCOCO testA with Qwen-VL evaluator
 python scripts/eval.py \
     --checkpoint Berkeley-NLP/REG-Molmo-Gaze-SeqAnyHit \
-    --dataset coco_2014 \
-    --split val
+    --dataset refcoco_testA \
+    --listener eval_qwenvl
 
-# Evaluate a listener policy (DTW distance & REC accuracy)
+# Evaluate speaker policy on RefOI co-occurrence benchmark
+python scripts/eval.py \
+    --checkpoint outputs/checkpoint_final \
+    --dataset refoi_co_occurrence \
+    --listener eval_qwenvl
+
+# Evaluate listener policy (DTW distance & REC accuracy from Appendix A.3)
 python scripts/eval_listener.py --checkpoint Berkeley-NLP/Molmo-REC-Gaze
 ```
 

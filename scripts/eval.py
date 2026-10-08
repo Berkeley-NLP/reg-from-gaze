@@ -3,11 +3,11 @@
 Main evaluation entry point for GazeRL and baseline reference games.
 
 Usage:
-    # Evaluate trained checkpoint on validation set
-    python scripts/eval.py --checkpoint outputs/checkpoint_final --dataset coco_2014 --split val
+    # Evaluate trained checkpoint on paper RefCOCO benchmark (with Qwen-VL evaluator):
+    python scripts/eval.py --checkpoint Berkeley-NLP/REG-Molmo-Gaze-BFH --dataset refcoco_testA --listener eval_qwenvl
 
-    # Evaluate zero-shot speaker baseline
-    python scripts/eval.py --speaker molmo --dataset refcoco --split val
+    # Evaluate on RefOI co-occurrence:
+    python scripts/eval.py --checkpoint outputs/checkpoint_final --dataset refoi_co_occurrence --listener eval_qwenvl
 
     # Instant smoke test
     python scripts/eval.py --smoke-test
@@ -42,9 +42,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate GazeRL speaker grounding and language quality.")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to trained speaker checkpoint.")
     parser.add_argument("--speaker", type=str, default="molmo", help="Speaker architecture ('molmo', 'paligemma', 'llava').")
-    parser.add_argument("--listener", type=str, default="gaze_predictor", help="Listener model architecture ('gaze_predictor', 'molmo_iterative', 'eval_qwenvl').")
-    parser.add_argument("--dataset", type=str, default="coco_2014", help="Dataset to evaluate ('coco_2014', 'coco_2017', 'refcoco').") 
-    parser.add_argument("--split", type=str, default="val", help="Dataset split ('val', 'test', etc.).")
+    parser.add_argument("--listener", type=str, default="eval_qwenvl", help="Listener model architecture ('eval_qwenvl', 'eval_cogvlm', 'gaze_predictor', 'molmo_iterative').")
+    parser.add_argument("--dataset", type=str, default="refcoco_testA", help="Dataset to evaluate ('refcoco_testA', 'refcoco_testB', 'refoi_co_occurrence', 'refoi_single_presence', 'refcoco', 'coco_2014').")
+    parser.add_argument("--split", type=str, default=None, help="Dataset split (optional; automatically inferred for refcoco_testA/B and refoi).")
     parser.add_argument("--max-samples", type=int, default=None, help="Maximum number of examples to evaluate.")
     parser.add_argument("--output", type=str, default="eval_results.json", help="Path to write output results JSON.")
     parser.add_argument("--prompt", type=str, default="Briefly describe the object in the red box.", help="Speaker generation prompt.")
@@ -93,7 +93,7 @@ def main():
     logger.info(f"Loading dataset: {args.dataset} (split: {args.split})...")
     dataset = ReferringExpressionDataset(
         dataset_name=args.dataset,
-        split_name=args.split,
+        split=args.split,
         max_samples=args.max_samples,
     )
 

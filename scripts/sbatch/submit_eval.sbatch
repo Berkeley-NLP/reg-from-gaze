@@ -13,7 +13,7 @@
 # GazeRL SLURM Evaluation Launcher
 # ==============================================================================
 # Usage:
-#   sbatch scripts/sbatch/submit_eval.sbatch outputs/checkpoint_final coco_2014 val
+#   sbatch scripts/sbatch/submit_eval.sbatch outputs/checkpoint_final refcoco_testA testA
 # ==============================================================================
 
 set -euo pipefail
@@ -23,8 +23,8 @@ CONDA_ENV="${CONDA_ENV:-/data/teaywright/conda/envs/gaze}"
 export PATH="${CONDA_ENV}/bin:${PATH}"
 
 CHECKPOINT="${1:-outputs/checkpoint_final}"
-DATASET="${2:-coco_2014}"
-SPLIT="${3:-val}"
+DATASET="${2:-refcoco_testA}"
+SPLIT="${3:-testA}"
 shift 3 || true
 EXTRA_ARGS="${*:-}"
 

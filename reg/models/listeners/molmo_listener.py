@@ -374,6 +374,49 @@ class MolmoListenerVectorized(BaseListener):
 
         return results
 
+    def _coords_to_listener_output(
+        self,
+        coords: List[Optional[List[float]]],
+        target_bbox_normalized: Optional[Tuple[float, float, float, float]] = None,
+        raw_text: Optional[str] = None,
+    ) -> ListenerOutput:
+        gaze_points: List[Optional[Tuple[float, float]]] = []
+        hit_mask: List[bool] = []
+        distances: List[float] = []
+        first_hit_idx: Optional[int] = None
+
+        if target_bbox_normalized is not None:
+            tx1, ty1, tx2, ty2 = target_bbox_normalized
+            cx = (tx1 + tx2) / 2.0
+            cy = (ty1 + ty2) / 2.0
+        else:
+            cx, cy = 0.0, 0.0
+
+        for idx, c in enumerate(coords):
+            if c is not None and len(c) >= 2:
+                px, py = c[0], c[1]
+                gaze_points.append((px, py))
+                hit = is_point_in_bbox((px, py), target_bbox_normalized) if target_bbox_normalized is not None else False
+                hit_mask.append(hit)
+                dist = float(np.hypot(px - cx, py - cy)) if target_bbox_normalized is not None else 0.0
+                distances.append(dist)
+                if hit and first_hit_idx is None:
+                    first_hit_idx = idx
+            else:
+                gaze_points.append(None)
+                hit_mask.append(False)
+                distances.append(100.0)
+
+        is_success = any(hit_mask)
+        return ListenerOutput(
+            gaze_points=gaze_points,
+            hit_mask=hit_mask,
+            is_success=is_success,
+            first_hit_index=first_hit_idx,
+            distances_to_bbox=distances,
+            raw_output_text=raw_text,
+        )
+
     def predict_batch(
         self,
         images: List[Image.Image],
@@ -385,14 +428,64 @@ class MolmoListenerVectorized(BaseListener):
 
     def predict(
         self,
-        img: Image.Image,
-        tokens: List[str],
+        images: Optional[Union[Image.Image, List[Image.Image]]] = None,
+        tokens_list: Optional[Union[List[str], List[List[str]]]] = None,
+        bboxes: Optional[Union[Tuple[float, float, float, float], List[Tuple[float, float, float, float]]]] = None,
+        img: Optional[Image.Image] = None,
+        tokens: Optional[List[str]] = None,
         sample: bool = False,
         bbox: Optional[Tuple[float, float, float, float]] = None,
         validation_mode: bool = False,
-    ) -> List[Optional[List[float]]]:
-        results = self.predict_vectorized([img], [tokens], [bbox], sample=sample, validation_mode=validation_mode)
-        return results[0]
+        **kwargs,
+    ) -> List[ListenerOutput]:
+        """
+        Batched or single listener prediction returning List[ListenerOutput].
+        Fully compatible with BaseListener.predict and legacy calls.
+        """
+        if images is None and img is not None:
+            images = [img]
+        elif isinstance(images, Image.Image):
+            images = [images]
+        elif images is None:
+            images = kwargs.get("image")
+            if isinstance(images, Image.Image):
+                images = [images]
+
+        if tokens_list is None and tokens is not None:
+            tokens_list = [tokens]
+        elif isinstance(tokens_list, list) and (len(tokens_list) == 0 or isinstance(tokens_list[0], str)):
+            tokens_list = [tokens_list]
+        elif tokens_list is None:
+            tok = kwargs.get("tokens")
+            if tok is not None:
+                tokens_list = [tok]
+
+        if bboxes is None and bbox is not None:
+            bboxes_list = [bbox]
+        elif bboxes is not None and not isinstance(bboxes, list):
+            bboxes_list = [bboxes]
+        elif bboxes is not None:
+            bboxes_list = bboxes
+        else:
+            cand = kwargs.get("target_bboxes_normalized") or kwargs.get("target_bboxes") or kwargs.get("bboxes")
+            if cand is not None:
+                bboxes_list = cand if isinstance(cand, list) else [cand]
+            else:
+                bboxes_list = [None] * (len(images) if images else 1)
+
+        raw_batch = self.predict_vectorized(
+            images,
+            tokens_list,
+            bboxes=bboxes_list,
+            sample=sample,
+            validation_mode=validation_mode,
+        )
+
+        outputs = []
+        for coords, tgt_bbox, toks in zip(raw_batch, bboxes_list, tokens_list):
+            raw_text = " ".join(toks) if isinstance(toks, list) else str(toks)
+            outputs.append(self._coords_to_listener_output(coords, tgt_bbox, raw_text=raw_text))
+        return outputs
 
     def predict_iterative(
         self,
@@ -401,7 +494,7 @@ class MolmoListenerVectorized(BaseListener):
         bbox: Optional[Tuple[float, float, float, float]] = None,
         validation_mode: bool = False,
     ) -> List[Optional[List[float]]]:
-        return self.predict(img, tokens, bbox=bbox, validation_mode=validation_mode)
+        return self.predict_vectorized([img], [tokens], [bbox], validation_mode=validation_mode)[0]
 
     def predict_gaze_sequence(
         self,
@@ -409,43 +502,13 @@ class MolmoListenerVectorized(BaseListener):
         referring_expression: str,
         target_bbox_normalized: Tuple[float, float, float, float],
     ) -> ListenerOutput:
+        """
+        Implementation of abstract BaseListener method.
+        Computes structured ListenerOutput for single episode evaluation.
+        """
         words = referring_expression.strip().split()
         if not words:
             words = ["."]
 
-        coords = self.predict(image, words, bbox=target_bbox_normalized, validation_mode=True)
-
-        gaze_points: List[Optional[Tuple[float, float]]] = []
-        hit_mask: List[bool] = []
-        distances: List[float] = []
-        first_hit_idx: Optional[int] = None
-
-        tx1, ty1, tx2, ty2 = target_bbox_normalized
-        cx = (tx1 + tx2) / 2.0
-        cy = (ty1 + ty2) / 2.0
-
-        for idx, c in enumerate(coords):
-            if c is not None and len(c) >= 2:
-                px, py = c[0], c[1]
-                gaze_points.append((px, py))
-                hit = is_point_in_bbox((px, py), target_bbox_normalized)
-                hit_mask.append(hit)
-                dist = float(np.hypot(px - cx, py - cy))
-                distances.append(dist)
-                if hit and first_hit_idx is None:
-                    first_hit_idx = idx
-            else:
-                gaze_points.append(None)
-                hit_mask.append(False)
-                distances.append(100.0)
-
-        is_success = any(hit_mask)
-
-        return ListenerOutput(
-            gaze_points=gaze_points,
-            hit_mask=hit_mask,
-            is_success=is_success,
-            first_hit_index=first_hit_idx,
-            distances_to_bbox=distances,
-            raw_output_text=referring_expression,
-        )
+        coords = self.predict_vectorized([image], [words], [target_bbox_normalized], validation_mode=True)[0]
+        return self._coords_to_listener_output(coords, target_bbox_normalized, raw_text=referring_expression)

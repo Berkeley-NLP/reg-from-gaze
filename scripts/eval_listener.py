@@ -41,30 +41,48 @@ def main():
 
     # If predictions path is given, run comparative benchmark directly
     preds_path = args.predictions
+    search_dirs = [
+        Path("results/listener_eval/preds"),
+        Path("preds"),
+        REPO_ROOT / "results/listener_eval/preds",
+        REPO_ROOT / "preds",
+    ]
+
     if not preds_path and args.checkpoint:
-        # Check if predictions already exist for this checkpoint in preds/
         clean_name = Path(args.checkpoint).name
-        candidate = Path(f"preds/predicted_gaze_{clean_name}.json")
-        if candidate.exists():
-            preds_path = str(candidate)
-        else:
-            # Fallback to delay token predictions if evaluating canonical checkpoint
-            if "116" in args.checkpoint:
-                preds_path = "preds/predicted_gaze_delay_token_116.json"
-            elif "1129" in args.checkpoint:
-                preds_path = "preds/predicted_gaze_output_delay_1129.json"
-            else:
-                preds_path = "preds/predicted_gaze_delay_token_116.json"
+        for sdir in search_dirs:
+            cand = sdir / f"predicted_gaze_{clean_name}.json"
+            if cand.exists():
+                preds_path = str(cand)
+                break
+
+        if not preds_path:
+            for sdir in search_dirs:
+                target_file = (
+                    "predicted_gaze_output_delay_1129.json" if "1129" in args.checkpoint
+                    else "predicted_gaze_delay_token_116.json"
+                )
+                cand = sdir / target_file
+                if cand.exists():
+                    preds_path = str(cand)
+                    break
 
     if not preds_path or not Path(preds_path).exists():
-        # Fallback to delay_1129 or delay_token_116
-        if Path("preds/predicted_gaze_output_delay_1129.json").exists():
-            preds_path = "preds/predicted_gaze_output_delay_1129.json"
-        elif Path("preds/predicted_gaze_delay_token_116.json").exists():
-            preds_path = "preds/predicted_gaze_delay_token_116.json"
-        else:
-            print(f"[ERROR] No valid predictions file found or provided.")
-            sys.exit(1)
+        for sdir in search_dirs:
+            for fallback_name in [
+                "predicted_gaze_delay_token_116.json",
+                "predicted_gaze_output_delay_1129.json",
+            ]:
+                cand = sdir / fallback_name
+                if cand.exists():
+                    preds_path = str(cand)
+                    break
+            if preds_path:
+                break
+
+    if not preds_path or not Path(preds_path).exists():
+        print(f"[ERROR] No valid predictions file found or provided.")
+        sys.exit(1)
 
     print("=" * 70)
     print("MOLMO-REC-GAZE BENCHMARK EVALUATION")

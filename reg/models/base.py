@@ -49,6 +49,15 @@ class ListenerOutput:
     def coordinates(self) -> List[Optional[Tuple[float, float]]]:
         return self.gaze_points
 
+    def __iter__(self):
+        return iter(self.gaze_points)
+
+    def __getitem__(self, idx):
+        return self.gaze_points[idx]
+
+    def __len__(self) -> int:
+        return len(self.gaze_points)
+
 
 class BaseSpeaker(nn.Module, ABC):
     """Abstract base class for referring expression generation models."""
@@ -174,13 +183,28 @@ class BaseListener(nn.Module, ABC):
 
     def predict(
         self,
-        images: List[Image.Image],
-        tokens_list: List[List[str]],
+        images: Union[Image.Image, List[Image.Image]],
+        tokens_list: Union[List[str], List[List[str]]],
+        bboxes: Optional[Union[Tuple[float, float, float, float], List[Tuple[float, float, float, float]]]] = None,
         **kwargs,
     ) -> List[ListenerOutput]:
-        """Batched listener prediction over images and token lists."""
+        """Batched listener prediction over images, token lists, and target bounding boxes."""
+        if isinstance(images, Image.Image):
+            images = [images]
+        if isinstance(tokens_list, list) and (len(tokens_list) == 0 or isinstance(tokens_list[0], str)):
+            tokens_list = [tokens_list]
+        if bboxes is None:
+            bboxes = kwargs.get("target_bboxes_normalized") or kwargs.get("target_bboxes") or kwargs.get("bbox")
+        if bboxes is not None and not isinstance(bboxes, list):
+            bboxes_list = [bboxes]
+        elif bboxes is not None:
+            bboxes_list = bboxes
+        else:
+            bboxes_list = [(0.0, 0.0, 0.0, 0.0)] * len(images)
+
         results = []
-        for img, toks in zip(images, tokens_list):
-            expr = " ".join(toks)
-            results.append(self.predict_gaze_sequence(img, expr, target_bbox_normalized=(0, 0, 0, 0)))
+        for img, toks, bbox in zip(images, tokens_list, bboxes_list):
+            expr = " ".join(toks) if isinstance(toks, list) else str(toks)
+            tgt_bbox = bbox if bbox is not None else (0.0, 0.0, 0.0, 0.0)
+            results.append(self.predict_gaze_sequence(img, expr, target_bbox_normalized=tgt_bbox))
         return results

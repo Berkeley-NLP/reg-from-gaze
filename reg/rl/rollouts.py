@@ -150,6 +150,7 @@ def collect_single_rollout(
     listener_out: ListenerOutput = listener.predict(
         images=[listener_image],
         tokens_list=[speaker_out.tokens],
+        bboxes=[bbox_100],
     )[0]
 
     # 5. Compute rewards

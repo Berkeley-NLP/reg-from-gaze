@@ -26,14 +26,16 @@ def generate_figure(output_dir: str = "."):
     img1_path = assets_dir / "example1_refcoco_testA.png"
     img2_path = assets_dir / "example2_refcoco_testB.png"
 
-    if not img1_path.exists() or not img2_path.exists():
-        # Fallback to GAZERL_COLM if available
-        base_colm = Path("/accounts/projects/berkeleynlp/teaywright/GAZERL_COLM")
-        img1_path = base_colm / "html/data/human_eval_data/images/refcoco_testA_1309.jpg"
-        img2_path = base_colm / "html/data/human_eval_data/images/refcoco_testB_203.jpg"
+    if not (img1_path.exists() and img2_path.exists()):
+        env_base = os.environ.get("GAZERL_HUMAN_IMAGES_DIR")
+        if env_base:
+            p1 = Path(env_base) / "refcoco_testA_1309.jpg"
+            p2 = Path(env_base) / "refcoco_testB_203.jpg"
+            if p1.exists() and p2.exists():
+                img1_path, img2_path = p1, p2
 
-    img1 = Image.open(img1_path)
-    img2 = Image.open(img2_path)
+    img1 = Image.open(img1_path) if img1_path.exists() else Image.new("RGB", (640, 480), color=(220, 220, 220))
+    img2 = Image.open(img2_path) if img2_path.exists() else Image.new("RGB", (640, 480), color=(220, 220, 220))
 
     # PDF MediaBox dimensions: 1118.88 x 511.282875 pt
     fig_w_pt = 1118.88

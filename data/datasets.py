@@ -197,23 +197,55 @@ class SyntheticReferringExpressionDataset(Dataset):
 
 class ReferringExpressionDataset(Dataset):
     """
-    Standard Referring Expression Dataset wrapping RefCOCO or COCO datasets.
+    Standard Referring Expression Dataset wrapping RefCOCO, RefOI, and COCO benchmarks.
+    Supports canonical paper evaluation test sets:
+      - refcoco_testA ('lmms-lab/refcoco', split='testA')
+      - refcoco_testB ('lmms-lab/refcoco', split='testB')
+      - refoi_co_occurrence ('Seed42Lab/RefOI', split='co_occurrence')
+      - refoi_single_presence ('Seed42Lab/RefOI', split='single_presence')
     """
 
     def __init__(
         self,
         dataset_name: str = "coco_2014",
-        split: str = "train",
+        split: Optional[str] = None,
+        split_name: Optional[str] = None,
         splits_dir: Union[str, Path] = "data/splits",
         prompt_type: str = "all",
         max_samples: Optional[int] = None,
         hf_dataset: Optional[Any] = None,
     ):
         self.dataset_name = dataset_name
-        self.split = split
         self.prompt_type = prompt_type
         self.prompts = get_prompts(prompt_type)
         self.split_manager = DatasetSplitManager(splits_dir)
+
+        target_split = split or split_name or "train"
+        raw_name = dataset_name.lower().replace("-", "_")
+
+        # Canonicalize paper evaluation datasets and splits
+        if "refcoco" in raw_name:
+            self.dataset_canonical = "refcoco"
+            if "testa" in raw_name or "testa" in target_split.lower() or target_split == "testA":
+                self.split = "testA"
+            elif "testb" in raw_name or "testb" in target_split.lower() or target_split == "testB":
+                self.split = "testB"
+            elif "val" in target_split.lower():
+                self.split = "val"
+            else:
+                self.split = target_split
+        elif "refoi" in raw_name:
+            self.dataset_canonical = "refoi"
+            if "single" in raw_name or "single" in target_split.lower():
+                self.split = "single_presence"
+            else:
+                self.split = "co_occurrence"
+        elif "2017" in raw_name:
+            self.dataset_canonical = "coco_2017"
+            self.split = target_split
+        else:
+            self.dataset_canonical = "coco_2014"
+            self.split = target_split
 
         if hf_dataset is not None:
             self.hf_dataset = hf_dataset
@@ -221,19 +253,31 @@ class ReferringExpressionDataset(Dataset):
             # Lazy load Hugging Face dataset if available
             try:
                 from datasets import load_dataset
-                hf_name = (
-                    "lmms-lab/refcoco" if "refcoco" in dataset_name.lower()
-                    else "NaiveDev/coco-2014-instance"
-                )
-                raw_ds = load_dataset(hf_name, split="train")
-                train_ids, val_ids = self.split_manager.load_splits(dataset_name)
-                target_ids = set(train_ids if split == "train" else val_ids)
-                id_col = "ref_id" if "ref_id" in raw_ds.column_names else "id"
-                self.hf_dataset = raw_ds.filter(lambda ex: str(ex.get(id_col, "")) in target_ids)
+                if self.dataset_canonical == "refcoco":
+                    if self.split in ("testA", "testB"):
+                        self.hf_dataset = load_dataset("lmms-lab/refcoco", split=self.split)
+                    else:
+                        raw_ds = load_dataset("lmms-lab/refcoco", split="train")
+                        train_ids, val_ids = self.split_manager.load_splits("refcoco")
+                        target_ids = set(train_ids if self.split == "train" else val_ids)
+                        id_col = "ref_id" if "ref_id" in raw_ds.column_names else "id"
+                        self.hf_dataset = raw_ds.filter(lambda ex: str(ex.get(id_col, "")) in target_ids)
+                elif self.dataset_canonical == "refoi":
+                    self.hf_dataset = load_dataset("Seed42Lab/RefOI", split=self.split)
+                else:
+                    hf_name = (
+                        "NaiveDev/coco-2014-instance" if "2014" in self.dataset_canonical
+                        else "detection-datasets/coco"
+                    )
+                    raw_ds = load_dataset(hf_name, split="train")
+                    train_ids, val_ids = self.split_manager.load_splits(self.dataset_canonical)
+                    target_ids = set(train_ids if self.split == "train" else val_ids)
+                    id_col = "ref_id" if "ref_id" in raw_ds.column_names else "id"
+                    self.hf_dataset = raw_ds.filter(lambda ex: str(ex.get(id_col, "")) in target_ids)
             except Exception as e:
                 logger.warning(
-                    "Could not load HuggingFace dataset %s: %s. Falling back to synthetic mode.",
-                    dataset_name, e
+                    "Could not load HuggingFace dataset %s (split: %s): %s. Falling back to synthetic mode.",
+                    dataset_name, self.split, e
                 )
                 self.hf_dataset = None
 
@@ -265,17 +309,44 @@ class ReferringExpressionDataset(Dataset):
         raw_image = raw_image.convert("RGB")
 
         orig_w, orig_h = raw_image.size
-        raw_bbox = example.get("bbox", [0, 0, orig_w, orig_h])
-        bbox_minmax = convert_bbox_to_minmax(raw_bbox, (orig_w, orig_h))
+
+        # Handle different bounding box annotations across RefCOCO, RefOI, and COCO
+        if "box_xmin" in example and example.get("box_xmin") is not None:
+            # RefOI format (normalized 0-1)
+            x1 = float(example["box_xmin"]) * orig_w
+            y1 = float(example["box_ymin"]) * orig_h
+            x2 = float(example["box_xmax"]) * orig_w
+            y2 = float(example["box_ymax"]) * orig_h
+            bbox_minmax = (x1, y1, x2, y2)
+        else:
+            raw_bbox = example.get("bbox", [0, 0, orig_w, orig_h])
+            bbox_minmax = convert_bbox_to_minmax(raw_bbox, (orig_w, orig_h))
+
         bbox_norm = normalize_bbox_for_gaze_predictor(bbox_minmax, (orig_w, orig_h))
 
         speaker_img = create_speaker_bbox_overlay(raw_image, bbox_minmax)
         listener_img = create_listener_padded_image(raw_image)
 
         prompt = random.choice(self.prompts)
-        sample_id = str(example.get("ref_id", example.get("id", f"sample_{idx}")))
-        gold_refs = example.get("sentences", example.get("captions", None))
-        if gold_refs and isinstance(gold_refs, list) and isinstance(gold_refs[0], dict):
+        sample_id = str(example.get("question_id", example.get("ref_id", example.get("id", f"sample_{idx}"))))
+
+        # Extract gold reference expressions
+        gold_refs = None
+        if "answer" in example:
+            ans = example["answer"]
+            gold_refs = ans if isinstance(ans, list) else [str(ans)]
+        elif "written_descriptions" in example:
+            written = example.get("written_descriptions") or []
+            spoken = example.get("spoken_descriptions") or []
+            gold_refs = (written if isinstance(written, list) else [str(written)]) + (
+                spoken if isinstance(spoken, list) else [str(spoken)]
+            )
+        elif "sentences" in example:
+            gold_refs = example["sentences"]
+        elif "captions" in example:
+            gold_refs = example["captions"]
+
+        if gold_refs and isinstance(gold_refs, list) and len(gold_refs) > 0 and isinstance(gold_refs[0], dict):
             gold_refs = [s.get("raw", s.get("sent", "")) for s in gold_refs]
 
         return ReferringExpressionSample(

@@ -112,6 +112,7 @@ def evaluate_dataset(
         listener_out: ListenerOutput = listener.predict(
             images=[listener_img],
             tokens_list=[tokens],
+            bboxes=[bbox_100],
         )[0]
 
         # Extract final predicted coordinate (or last point in scanpath)

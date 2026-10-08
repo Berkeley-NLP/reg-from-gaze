@@ -41,7 +41,10 @@ import matplotlib.patheffects as path_effects
 from PIL import Image
 
 # --- Directory Paths ---
+import sys
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 FIGURES_DIR = REPO_ROOT / "figures"
 ARTIFACT_DIR = Path("/accounts/projects/berkeleynlp/teaywright/.gemini/antigravity-cli/brain/4650fa71-f324-48ea-9c07-38c6865071e4")
 CURRENT_ARTIFACT_DIR = Path("/accounts/projects/berkeleynlp/teaywright/.gemini/antigravity-cli/brain/834dbf5c-6927-449b-93b5-62bb598fdf21")

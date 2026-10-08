@@ -170,7 +170,7 @@ def main():
     logger.info(f"Loading training dataset: {config.dataset.dataset_name} ({config.dataset.train_split})")
     train_dataset = ReferringExpressionDataset(
         dataset_name=config.dataset.dataset_name,
-        split_name=config.dataset.train_split,
+        split=config.dataset.train_split,
         splits_dir=config.dataset.splits_dir,
         max_samples=config.dataset.max_samples,
     )
@@ -179,7 +179,7 @@ def main():
     try:
         val_dataset = ReferringExpressionDataset(
             dataset_name=config.dataset.dataset_name,
-            split_name=config.dataset.val_split,
+            split=config.dataset.val_split,
             splits_dir=config.dataset.splits_dir,
             max_samples=config.training.validation_batch_size,
         )

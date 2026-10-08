@@ -87,6 +87,7 @@ def resolve_gaze_predictor_path(explicit_path: str = None) -> str:
 DEFAULT_GAZE_PREDICTOR_WEIGHTS = DEFAULT_HF_GAZE_PREDICTOR_REPO
 
 # Molmo listener checkpoint paths (for REC experiments)
+DEFAULT_HF_MOLMO_LISTENER_REPO = DEFAULT_MOLMO_MODEL
 KNOWN_MOLMO_LISTENER_CANDIDATES = [
     "/scratch/users/teaywright/molmo_listener_bbox_center",
     DEFAULT_MOLMO_MODEL,

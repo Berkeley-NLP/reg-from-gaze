@@ -1,7 +1,7 @@
 model_name: allenai/Molmo-7B-D-0924
 train_json: data/refcocogaze/refcocogaze_train_adjusted.json
 val_json: data/refcocogaze/refcocogaze_val_adjusted.json
-image_base: ../../../../scratch/current/teaywright/images
+image_base: data/images  # Or specify path to COCO/RefCOCO images directory
 output_dir: output
 
 data:

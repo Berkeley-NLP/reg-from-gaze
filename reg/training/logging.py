@@ -4,6 +4,7 @@ Logging utilities: console progress formatting, JSONL metric logging, and WandB 
 
 import json
 import logging
+import os
 from pathlib import Path
 import time
 from typing import Any, Dict, Optional, Union

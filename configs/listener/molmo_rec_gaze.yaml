@@ -1,4 +1,4 @@
-# Canonical Molmo-REC-Gaze configuration (produces gaze_predictor_delay_token_116)
+# Molmo-REC-Gaze listener configuration (paper canonical listener architecture)
 model:
   name_or_path: allenai/Molmo-7B-D-0924
   freeze_vision_backbone: true
@@ -27,4 +27,4 @@ training:
   early_stopping_patience: 5
   seed: 42
   wandb_project: gaze-estimation
-  wandb_entity: null  # placeholder: set your W&B entity or export WANDB_ENTITY
+  wandb_entity: null

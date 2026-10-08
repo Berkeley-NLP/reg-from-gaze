@@ -53,7 +53,7 @@ class GazeRLReward(BaseRewardFunction):
         **kwargs,
     ):
         super().__init__(debug=debug)
-        self.reward_type = reward_type.lower()
+        self.reward_type = reward_type.lower().replace("-", "_")
         self.gamma = gamma
         self.hit_reward = hit_reward
         self.miss_reward = miss_reward
@@ -141,13 +141,13 @@ class GazeRLReward(BaseRewardFunction):
         sparse_out: Optional[RewardOutput] = None
         shaping_out: Optional[RewardOutput] = None
 
-        if self.reward_type in ("sparse_decay", "gaze_bfh", "rec_bfh", "sparse"):
+        if self.reward_type in ("sparse_decay", "gaze_bfh", "rec_bfh", "sparse", "bfh", "before_first_hit", "gaze_before_first_hit", "rec_before_first_hit"):
             sparse_out = self._bfh.compute_rewards(gaze_points, bbox, tokens=tokens)
-        elif self.reward_type in ("binary", "gaze_seq_any_hit", "rec_seq_any_hit"):
+        elif self.reward_type in ("binary", "gaze_seq_any_hit", "rec_seq_any_hit", "seq_any_hit", "seqanyhit"):
             sparse_out = self._seq_any.compute_rewards(gaze_points, bbox, tokens=tokens)
-        elif self.reward_type in ("binary_last_point", "gaze_seq_lp_hit"):
+        elif self.reward_type in ("binary_last_point", "gaze_seq_lp_hit", "rec_seq_lp_hit", "seq_lp_hit", "seq_lphit", "seqlphit"):
             sparse_out = self._seq_lp.compute_rewards(gaze_points, bbox, tokens=tokens)
-        elif self.reward_type in ("supervised", "rec_success"):
+        elif self.reward_type in ("supervised", "rec_success", "rec_supervised", "success"):
             sparse_out = self._supervised.compute_rewards(gaze_points, bbox, tokens=tokens)
         elif self.reward_type in ("distance_shaping", "gaze_shaping", "rec_shaping", "shaping"):
             shaping_out = self._dist_shaping.compute_rewards(gaze_points, bbox, tokens=tokens)

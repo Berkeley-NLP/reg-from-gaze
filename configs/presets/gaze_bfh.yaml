@@ -1,5 +1,5 @@
 name: gaze_bfh
-description: GazeRL with Gaze Predictor and Backward First Hit (BFH) sparse reward
+description: GazeRL with Gaze Predictor and Before-First-Hit (BFH) sparse reward
 speaker:
   model_name_or_path: allenai/Molmo-7B-D-0924
   architecture: molmo
